@@ -17,7 +17,7 @@ var privateTypeMatcherLen int = len(privateTypeMatcher)
 var declareOfArgsType = make(map[string]string, 0)
 var declareOfArgsNames = make([]string, 0)
 
-func addForDecalareNewArgsType(name string, definition string) {
+func addForDeclareNewArgsType(name string, definition string) {
 	exists, ok := declareOfArgsType[name]
 	if ok {
 		if exists != definition {
@@ -35,7 +35,7 @@ func addForDecalareNewArgsType(name string, definition string) {
 	}
 }
 
-func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, forOut bool, hasDefaultValue bool) (nameStr string, needDeclare bool, baseType bool) {
+func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, forOutOrDeclare bool, hasDefaultValue bool) (nameStr string, needDeclare bool, baseType bool) {
 	var (
 		sufix  string
 		prefix string
@@ -58,7 +58,11 @@ func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, for
 		}
 		return prefix + `string`, false, true
 	case `INTERFACE`, `UNION`:
-		if forOut {
+		if forOutOrDeclare {
+			prefix = `*`
+		}
+	case `INPUT_OBJECT`:
+		if !innerCall && !forOutOrDeclare {
 			prefix = `*`
 		}
 	case `SCALAR`:
@@ -80,7 +84,7 @@ func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, for
 			innerCall = true
 		}
 
-		nameStr, needDeclare, baseType = getNameOfType(t.OfType(), withOutSufix, innerCall, forOut, hasDefaultValue)
+		nameStr, needDeclare, baseType = getNameOfType(t.OfType(), withOutSufix, innerCall, forOutOrDeclare, hasDefaultValue)
 		nameStr = prefix + nameStr
 
 		return nameStr, needDeclare, baseType
@@ -150,7 +154,7 @@ func printArgs(funcName string, f *introspection.Field) (declareArg string) {
 	buf.WriteString("}\n\n")
 
 	declareArg = fmt.Sprintf("in %sArguments", funcName)
-	addForDecalareNewArgsType(funcName+"Arguments", buf.String())
+	addForDeclareNewArgsType(funcName+"Arguments", buf.String())
 
 	return declareArg
 
@@ -294,7 +298,7 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 			}
 			tBuf.WriteString("}\n\n")
 		case "INPUT_OBJECT":
-			nameOfInput, _, _ := getNameOfType(td, true, false, false, false)
+			nameOfInput, _, _ := getNameOfType(td, true, false, true, false)
 			tBuf.WriteString(fmt.Sprintf("type %s struct {\n", nameOfInput))
 			inputValues := td.InputFields()
 			if inputValues != nil {

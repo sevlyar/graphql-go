@@ -151,7 +151,7 @@ type CharacterArguments struct {
 
 type CreateReviewArguments struct {
 	Episode string
-	Review  ReviewInputResolver
+	Review  ReviewInput
 }
 
 type DroidArguments struct {
@@ -312,7 +312,7 @@ type ReviewResolver interface {
 }
 
 // The input object sent when someone is creating a new review
-type ReviewInputResolver struct {
+type ReviewInput struct {
 	// 0-5 stars
 	Stars int32
 	// Comment about the movie, optional

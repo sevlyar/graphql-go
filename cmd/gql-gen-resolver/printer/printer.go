@@ -74,7 +74,13 @@ func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, for
 	}
 
 	if name == nil {
-		nameStr, needDeclare, baseType = getNameOfType(t.OfType(), withOutSufix, true, forOut, hasDefaultValue)
+		if t.Kind() == `LIST` {
+			innerCall = false
+		} else {
+			innerCall = true
+		}
+
+		nameStr, needDeclare, baseType = getNameOfType(t.OfType(), withOutSufix, innerCall, forOut, hasDefaultValue)
 		nameStr = prefix + nameStr
 
 		return nameStr, needDeclare, baseType
@@ -84,6 +90,9 @@ func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, for
 	case `ID`:
 		baseType = true
 		nameStr = prefix + `graphql.ID`
+	case `Time`:
+		baseType = true
+		nameStr = prefix + `graphql.Time`
 	case `String`:
 		baseType = true
 		nameStr = prefix + `string`
@@ -133,7 +142,8 @@ func printArgs(funcName string, f *introspection.Field) (declareArg string) {
 			hasDefValue = true
 			buf.WriteString(fmt.Sprintf("\t// default value \"%s\"\n", *v))
 		}
-		nameOfType, _, _ := getNameOfType(typeOf, false, false, false, hasDefValue)
+		// just input - is struct - not need %sResolver
+		nameOfType, _, _ := getNameOfType(typeOf, true, false, false, hasDefValue)
 		buf.WriteString(fmt.Sprintf("\t%s %s\n", fmtName(nameArg), nameOfType))
 	}
 
@@ -156,12 +166,12 @@ func printInputValue(prefix string, buf *bytes.Buffer, f *introspection.InputVal
 		hasDefValue = true
 		_, _ = buf.WriteString(fmt.Sprintf("%s// default value - \"%s\"\n", prefix, *dv))
 	}
-	typeStr, _, _ := getNameOfType(f.Type(), false, false, false, hasDefValue)
+	typeStr, _, _ := getNameOfType(f.Type(), true, false, false, hasDefValue)
 
 	_, _ = buf.WriteString(prefix + name + ` ` + typeStr + "\n")
 }
 
-func printField(tBuf, declareBuf *bytes.Buffer, f *introspection.Field) {
+func printField(tBuf *bytes.Buffer, f *introspection.Field) {
 	printDescription("\t", tBuf, f)
 	printDeprecatedInfo("\t", tBuf, f)
 
@@ -228,7 +238,7 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 		switch td.Kind() {
 		case "ENUM":
 			// DO NOTHING FOR NOW
-			//tBuf.WriteString(fmt.Sprintf("type %s string\n", nameOfType))
+			// tBuf.WriteString(fmt.Sprintf("type %s string\n", nameOfType))
 		case "UNION":
 			// generate implementation for switch
 			mayBeRealisation := td.PossibleTypes()
@@ -253,7 +263,7 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 			fields := td.Fields(IncludeDeprecated)
 			if fields != nil {
 				for _, f := range *fields {
-					printField(tBuf, declareBuf, f)
+					printField(tBuf, f)
 				}
 			}
 			tBuf.WriteString("}\n\n")
@@ -279,12 +289,13 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 			fields := td.Fields(IncludeDeprecated)
 			if fields != nil {
 				for _, f := range *fields {
-					printField(tBuf, declareBuf, f)
+					printField(tBuf, f)
 				}
 			}
 			tBuf.WriteString("}\n\n")
 		case "INPUT_OBJECT":
-			tBuf.WriteString(fmt.Sprintf("type %s struct {\n", nameOfType))
+			nameOfInput, _, _ := getNameOfType(td, true, false, false, false)
+			tBuf.WriteString(fmt.Sprintf("type %s struct {\n", nameOfInput))
 			inputValues := td.InputFields()
 			if inputValues != nil {
 				for _, f := range *inputValues {

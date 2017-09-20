@@ -35,7 +35,7 @@ func addForDeclareNewArgsType(name string, definition string) {
 	}
 }
 
-func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, forOutOrDeclare bool, hasDefaultValue bool) (nameStr string, needDeclare bool, baseType bool) {
+func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, forOutOrDeclare bool, hasDefaultValue bool, callFromMain bool) (nameStr string, needDeclare bool, baseType bool) {
 	var (
 		sufix  string
 		prefix string
@@ -53,10 +53,16 @@ func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, for
 
 	switch t.Kind() {
 	case `ENUM`:
-		if !innerCall && !hasDefaultValue {
+		//nameOfEnum := t.Name()
+		//if callFromMain && nameOfEnum != nil {
+		//	return *nameOfEnum, true, false
+		//}
+		if !innerCall && !callFromMain && !hasDefaultValue {
 			prefix = `*`
 		}
-		return prefix + `string`, false, true
+		sufix = ``
+
+		//return prefix + *nameOfEnum, false, true
 	case `INTERFACE`, `UNION`:
 		if forOutOrDeclare {
 			prefix = `*`
@@ -84,7 +90,7 @@ func getNameOfType(t *introspection.Type, withOutSufix bool, innerCall bool, for
 			innerCall = true
 		}
 
-		nameStr, needDeclare, baseType = getNameOfType(t.OfType(), withOutSufix, innerCall, forOutOrDeclare, hasDefaultValue)
+		nameStr, needDeclare, baseType = getNameOfType(t.OfType(), withOutSufix, innerCall, forOutOrDeclare, hasDefaultValue, false)
 		nameStr = prefix + nameStr
 
 		return nameStr, needDeclare, baseType
@@ -147,7 +153,7 @@ func printArgs(funcName string, f *introspection.Field) (declareArg string) {
 			buf.WriteString(fmt.Sprintf("\t// default value \"%s\"\n", *v))
 		}
 		// just input - is struct - not need %sResolver
-		nameOfType, _, _ := getNameOfType(typeOf, true, false, false, hasDefValue)
+		nameOfType, _, _ := getNameOfType(typeOf, true, false, false, hasDefValue, false)
 		buf.WriteString(fmt.Sprintf("\t%s %s\n", fmtName(nameArg), nameOfType))
 	}
 
@@ -170,7 +176,7 @@ func printInputValue(prefix string, buf *bytes.Buffer, f *introspection.InputVal
 		hasDefValue = true
 		_, _ = buf.WriteString(fmt.Sprintf("%s// default value - \"%s\"\n", prefix, *dv))
 	}
-	typeStr, _, _ := getNameOfType(f.Type(), true, false, false, hasDefValue)
+	typeStr, _, _ := getNameOfType(f.Type(), true, false, false, hasDefValue, false)
 
 	_, _ = buf.WriteString(prefix + name + ` ` + typeStr + "\n")
 }
@@ -192,7 +198,7 @@ func printField(tBuf *bytes.Buffer, f *introspection.Field) {
 		baseType bool
 	)
 	if outType != nil {
-		nameOut, _, baseType = getNameOfType(outType, false, false, true, false)
+		nameOut, _, baseType = getNameOfType(outType, false, false, true, false, false)
 
 		if !baseType {
 			if args == "" {
@@ -230,7 +236,7 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 	typeDesc := descriptor.Types()
 	for _, td := range typeDesc {
 
-		nameOfType, needDeclare, _ := getNameOfType(td, false, false, false, false)
+		nameOfType, needDeclare, _ := getNameOfType(td, false, false, false, false, true)
 		if !needDeclare {
 			continue
 		}
@@ -241,27 +247,38 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 
 		switch td.Kind() {
 		case "ENUM":
-			// DO NOTHING FOR NOW
-			// tBuf.WriteString(fmt.Sprintf("type %s string\n", nameOfType))
+			// set alias for string
+			values := td.EnumValues(IncludeDeprecated)
+			if values != nil {
+				tBuf.WriteString(fmt.Sprintf("type %s = string\n", nameOfType))
+				tBuf.WriteString("const (\n")
+				for _, enumValue := range *values {
+					printDescription("\t", tBuf, enumValue)
+					printDeprecatedInfo("\t", tBuf, enumValue)
+					enumStr := strings.ToUpper(enumValue.Name())
+					tBuf.WriteString(fmt.Sprintf("\t%s_%s = `%s`\n", nameOfType, enumStr, enumStr))
+				}
+				tBuf.WriteString(")\n")
+			}
 		case "UNION":
 			// generate implementation for switch
 			mayBeRealisation := td.PossibleTypes()
 			if mayBeRealisation != nil {
 				tBuf.WriteString(fmt.Sprintf("type %s struct {\n", nameOfType))
-				tBuf.WriteString(fmt.Sprintf("\tresult interface{}\n"))
+				tBuf.WriteString(fmt.Sprintf("\tResult interface{}\n"))
 				tBuf.WriteString("}\n\n")
 
 				for _, realT := range *mayBeRealisation {
-					nameImplement, _, _ := getNameOfType(realT, true, false, false, false)
-					nameImplementResolver, _, _ := getNameOfType(realT, false, false, false, false)
+					nameImplement, _, _ := getNameOfType(realT, true, false, false, false, false)
+					nameImplementResolver, _, _ := getNameOfType(realT, false, false, false, false, false)
 					tBuf.WriteString(fmt.Sprintf("func (i *%s) To%s() (%s, bool) {\n", nameOfType, nameImplement, nameImplementResolver))
-					tBuf.WriteString(fmt.Sprintf("\tc, ok := i.result.(%s)\n\treturn c, ok\n", nameImplementResolver))
+					tBuf.WriteString(fmt.Sprintf("\tc, ok := i.Result.(%s)\n\treturn c, ok\n", nameImplementResolver))
 					tBuf.WriteString("}\n\n")
 				}
 			}
 
 		case "INTERFACE":
-			nameOfInterface, _, _ := getNameOfType(td, true, false, false, false)
+			nameOfInterface, _, _ := getNameOfType(td, true, false, false, false, false)
 
 			tBuf.WriteString(fmt.Sprintf("type %s interface {\n", nameOfInterface))
 			fields := td.Fields(IncludeDeprecated)
@@ -280,8 +297,8 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 				tBuf.WriteString("}\n\n")
 
 				for _, realT := range *mayBeRealisation {
-					nameImplement, _, _ := getNameOfType(realT, true, false, false, false)
-					nameImplementResolver, _, _ := getNameOfType(realT, false, false, false, false)
+					nameImplement, _, _ := getNameOfType(realT, true, false, false, false, false)
+					nameImplementResolver, _, _ := getNameOfType(realT, false, false, false, false, false)
 					tBuf.WriteString(fmt.Sprintf("func (i *%s) To%s() (%s, bool) {\n", nameOfType, nameImplement, nameImplementResolver))
 					tBuf.WriteString(fmt.Sprintf("\tc, ok := i.%s.(%s)\n\treturn c, ok\n", nameOfInterface, nameImplementResolver))
 					tBuf.WriteString("}\n\n")
@@ -298,7 +315,7 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 			}
 			tBuf.WriteString("}\n\n")
 		case "INPUT_OBJECT":
-			nameOfInput, _, _ := getNameOfType(td, true, false, true, false)
+			nameOfInput, _, _ := getNameOfType(td, true, false, true, false, false)
 			tBuf.WriteString(fmt.Sprintf("type %s struct {\n", nameOfInput))
 			inputValues := td.InputFields()
 			if inputValues != nil {
@@ -355,7 +372,12 @@ import (
 	return nil
 }
 
-func printDeprecatedInfo(prefix string, buf *bytes.Buffer, field *introspection.Field) {
+type Deprecator interface {
+	IsDeprecated() bool
+	DeprecationReason() *string
+}
+
+func printDeprecatedInfo(prefix string, buf *bytes.Buffer, field Deprecator) {
 	if field == nil || buf == nil {
 		return
 	}

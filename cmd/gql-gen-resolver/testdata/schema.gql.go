@@ -150,7 +150,7 @@ type CharacterArguments struct {
 }
 
 type CreateReviewArguments struct {
-	Episode string
+	Episode Episode
 	Review  ReviewInput
 }
 
@@ -165,12 +165,12 @@ type FriendsConnectionArguments struct {
 
 type HeightArguments struct {
 	// default value "METER"
-	Unit string
+	Unit LengthUnit
 }
 
 type HeroArguments struct {
 	// default value "NEWHOPE"
-	Episode string
+	Episode Episode
 }
 
 type HumanArguments struct {
@@ -179,11 +179,11 @@ type HumanArguments struct {
 
 type LengthArguments struct {
 	// default value "METER"
-	Unit string
+	Unit LengthUnit
 }
 
 type ReviewsArguments struct {
-	Episode *string
+	Episode *Episode
 }
 
 type SearchArguments struct {
@@ -205,7 +205,7 @@ type Character interface {
 	// The friends of the character exposed as a connection with edges
 	FriendsConnection(ctx context.Context, in FriendsConnectionArguments) (FriendsConnectionResolver, error)
 	// The movies this character appears in
-	AppearsIn() []string
+	AppearsIn(ctx context.Context) ([]Episode, error)
 }
 
 type CharacterResolver struct {
@@ -233,10 +233,22 @@ type DroidResolver interface {
 	// The friends of the droid exposed as a connection with edges
 	FriendsConnection(ctx context.Context, in FriendsConnectionArguments) (FriendsConnectionResolver, error)
 	// The movies this droid appears in
-	AppearsIn() []string
+	AppearsIn(ctx context.Context) ([]Episode, error)
 	// This droid's primary function
 	PrimaryFunction() *string
 }
+
+// The episodes in the Star Wars trilogy
+type Episode = string
+
+const (
+	// Star Wars Episode IV: A New Hope, released in 1977.
+	Episode_NEWHOPE = `NEWHOPE`
+	// Star Wars Episode V: The Empire Strikes Back, released in 1980.
+	Episode_EMPIRE = `EMPIRE`
+	// Star Wars Episode VI: Return of the Jedi, released in 1983.
+	Episode_JEDI = `JEDI`
+)
 
 // A connection object for a character's friends
 type FriendsConnectionResolver interface {
@@ -273,10 +285,20 @@ type HumanResolver interface {
 	// The friends of the human exposed as a connection with edges
 	FriendsConnection(ctx context.Context, in FriendsConnectionArguments) (FriendsConnectionResolver, error)
 	// The movies this human appears in
-	AppearsIn() []string
+	AppearsIn(ctx context.Context) ([]Episode, error)
 	// A list of starships this person has piloted, or an empty list if none
 	Starships(ctx context.Context) (*[]StarshipResolver, error)
 }
+
+// Units of height
+type LengthUnit = string
+
+const (
+	// The standard unit around the world
+	LengthUnit_METER = `METER`
+	// Primarily used in the United States
+	LengthUnit_FOOT = `FOOT`
+)
 
 // The mutation type, represents all updates we can make to our data
 type MutationResolver interface {
@@ -320,21 +342,21 @@ type ReviewInput struct {
 }
 
 type SearchResultResolver struct {
-	result interface{}
+	Result interface{}
 }
 
 func (i *SearchResultResolver) ToHuman() (HumanResolver, bool) {
-	c, ok := i.result.(HumanResolver)
+	c, ok := i.Result.(HumanResolver)
 	return c, ok
 }
 
 func (i *SearchResultResolver) ToDroid() (DroidResolver, bool) {
-	c, ok := i.result.(DroidResolver)
+	c, ok := i.Result.(DroidResolver)
 	return c, ok
 }
 
 func (i *SearchResultResolver) ToStarship() (StarshipResolver, bool) {
-	c, ok := i.result.(StarshipResolver)
+	c, ok := i.Result.(StarshipResolver)
 	return c, ok
 }
 

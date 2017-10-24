@@ -108,6 +108,27 @@ func TestHelloWorld(t *testing.T) {
 				}
 			`,
 		},
+		{
+			Schema: graphql.MustParseSchema(`
+				schema {
+					subscription: Subscription
+				}
+
+				type Subscription {
+					hello: String!
+				}
+			`, &helloWorldResolver2{}),
+			Query: `
+				subscription Hi {
+				  hello {}
+				}
+			`,
+			ExpectedResult: `
+				{
+					"hello": "Hello world!"
+				}
+			`,
+		},
 	})
 }
 

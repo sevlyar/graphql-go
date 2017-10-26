@@ -69,7 +69,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// check additional queries from context
 	if queries, ok := GetQueries(ctx); ok {
 		for topic, params := range queries {
-			addResponse := h.Schema.Exec(ctx, params.Query, params.OperationName, params.Variables)
+			addResponse := h.Schema.Exec(r.Context(), params.Query, params.OperationName, params.Variables)
 			// TODO: don't ignore error
 			if response.Extensions == nil {
 				response.Extensions = make(map[string]interface{})

@@ -54,7 +54,10 @@ func main() {
 	buff := bytes.NewBuffer(nil)
 
 	packageName := getPackageName(path)
-	printer.Print(*schema, packageName, string(schemaRaw), buff)
+	err = printer.Print(*schema, packageName, string(schemaRaw), buff)
+	if err != nil {
+		log.Fatalf(`generation failed: %s`, err)
+	}
 
 	_, err = file.Write(buff.Bytes())
 	if err != nil {

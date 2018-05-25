@@ -200,7 +200,8 @@ func printField(tBuf *bytes.Buffer, f *introspection.Field) {
 	if outType != nil {
 		nameOut, _, baseType = getNameOfType(outType, false, false, true, false, false)
 
-		if !baseType {
+		desc := f.Description()
+		if !baseType || (desc != nil && strings.Contains(*desc, "@lazy"))  {
 			if args == "" {
 				args = "ctx context.Context"
 			} else {

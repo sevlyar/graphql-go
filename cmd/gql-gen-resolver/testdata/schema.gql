@@ -82,7 +82,7 @@ type Droid implements Character {
 }
 # A connection object for a character's friends
 type FriendsConnection {
-    # The total number of friends
+    # The total number of friends @lazy
     totalCount: Int!
     # The edges for each of the character's friends.
     edges: [FriendsEdge]

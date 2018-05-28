@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"text/scanner"
 
-	"github.com/lygo/graphql-go/errors"
+	"github.com/sevlyar/graphql-go/errors"
 )
 
 type syntaxError string

@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/lygo/graphql-go/errors"
+	"github.com/sevlyar/graphql-go/errors"
 )
 
 type InputValue struct {

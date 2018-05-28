@@ -8,17 +8,17 @@ import (
 
 	"strconv"
 
-	"github.com/lygo/graphql-go/errors"
-	"github.com/lygo/graphql-go/internal/common"
-	"github.com/lygo/graphql-go/internal/exec"
-	"github.com/lygo/graphql-go/internal/exec/resolvable"
-	"github.com/lygo/graphql-go/internal/exec/selected"
-	"github.com/lygo/graphql-go/internal/query"
-	"github.com/lygo/graphql-go/internal/schema"
-	"github.com/lygo/graphql-go/internal/validation"
-	"github.com/lygo/graphql-go/introspection"
-	"github.com/lygo/graphql-go/log"
-	"github.com/lygo/graphql-go/trace"
+	"github.com/sevlyar/graphql-go/errors"
+	"github.com/sevlyar/graphql-go/internal/common"
+	"github.com/sevlyar/graphql-go/internal/exec"
+	"github.com/sevlyar/graphql-go/internal/exec/resolvable"
+	"github.com/sevlyar/graphql-go/internal/exec/selected"
+	"github.com/sevlyar/graphql-go/internal/query"
+	"github.com/sevlyar/graphql-go/internal/schema"
+	"github.com/sevlyar/graphql-go/internal/validation"
+	"github.com/sevlyar/graphql-go/introspection"
+	"github.com/sevlyar/graphql-go/log"
+	"github.com/sevlyar/graphql-go/trace"
 )
 
 // ID represents GraphQL's "ID" type. A custom type may be used instead.

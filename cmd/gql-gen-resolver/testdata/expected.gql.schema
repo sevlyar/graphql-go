@@ -4,7 +4,7 @@ package testdata
 
 import (
 	context "context"
-	graphql "github.com/lygo/graphql-go"
+	graphql "github.com/sevlyar/graphql-go"
 )
 
 // schema from source: testdata/schema.gql

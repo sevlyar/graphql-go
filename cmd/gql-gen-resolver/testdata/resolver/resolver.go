@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/lygo/graphql-go"
-	"github.com/lygo/graphql-go/cmd/gql-gen-resolver/testdata"
+	"github.com/sevlyar/graphql-go"
+	"github.com/sevlyar/graphql-go/cmd/gql-gen-resolver/testdata"
 	"strconv"
 	"strings"
 )
@@ -455,8 +455,8 @@ func newFriendsConnectionResolver(ids []graphql.ID, args testdata.FriendsConnect
 	}, nil
 }
 
-func (r *friendsConnectionResolver) TotalCount() int32 {
-	return int32(len(r.ids))
+func (r *friendsConnectionResolver) TotalCount(ctx context.Context) (int32, error) {
+	return int32(len(r.ids)), nil
 }
 
 func (r *friendsConnectionResolver) Edges(ctx context.Context) (*[]testdata.FriendsEdgeResolver, error) {

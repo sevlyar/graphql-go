@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lygo/graphql-go"
-	"github.com/lygo/graphql-go/example/starwars"
-	"github.com/lygo/graphql-go/gqltesting"
+	"github.com/sevlyar/graphql-go"
+	"github.com/sevlyar/graphql-go/example/starwars"
+	"github.com/sevlyar/graphql-go/gqltesting"
 )
 
 type helloWorldResolver1 struct{}

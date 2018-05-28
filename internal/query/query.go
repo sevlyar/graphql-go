@@ -5,8 +5,8 @@ import (
 	"strings"
 	"text/scanner"
 
-	"github.com/lygo/graphql-go/errors"
-	"github.com/lygo/graphql-go/internal/common"
+	"github.com/sevlyar/graphql-go/errors"
+	"github.com/sevlyar/graphql-go/internal/common"
 )
 
 type Document struct {

@@ -3,8 +3,8 @@ package printer
 import (
 	"bytes"
 	"fmt"
-	"github.com/lygo/graphql-go"
-	"github.com/lygo/graphql-go/introspection"
+	"github.com/sevlyar/graphql-go"
+	"github.com/sevlyar/graphql-go/introspection"
 	"io"
 	"sort"
 	"strings"
@@ -333,7 +333,7 @@ func Print(sourceName, packageName, schema string, writer io.Writer) error {
 
 	headerBuf.WriteString(`
 import (
-	graphql "github.com/lygo/graphql-go"
+	graphql "github.com/sevlyar/graphql-go"
 	context "context"
 )
 `)

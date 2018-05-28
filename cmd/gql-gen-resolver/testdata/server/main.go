@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"flag"
-	"github.com/lygo/graphql-go"
-	"github.com/lygo/graphql-go/cmd/gql-gen-resolver/testdata"
-	"github.com/lygo/graphql-go/cmd/gql-gen-resolver/testdata/resolver"
-	"github.com/lygo/graphql-go/relay"
+	"github.com/sevlyar/graphql-go"
+	"github.com/sevlyar/graphql-go/cmd/gql-gen-resolver/testdata"
+	"github.com/sevlyar/graphql-go/cmd/gql-gen-resolver/testdata/resolver"
+	"github.com/sevlyar/graphql-go/relay"
 )
 
 var (

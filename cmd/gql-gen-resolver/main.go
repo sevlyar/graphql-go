@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
-	"github.com/lygo/graphql-go/cmd/gql-gen-resolver/printer"
+	"github.com/sevlyar/graphql-go/cmd/gql-gen-resolver/printer"
 	"io/ioutil"
 	"log"
 	"os"
